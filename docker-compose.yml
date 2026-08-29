@@ -110,6 +110,14 @@ services:
       - ./data/wings:/wings-config
       - ./plugins:/var/www/html/plugins
       - ./docker/provision:/provision:ro
+    # Turns healthy as soon as the Wings config exists - panel and Wings wait
+    # for that instead of for the whole container, so this one can stay alive
+    # and reach Wings' API afterwards to create the test server.
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/provision-ready"]
+      interval: 1s
+      timeout: 2s
+      retries: 300
 
   panel:
     image: ghcr.io/pelican/panel:latest
@@ -120,7 +128,7 @@ services:
     command: ["supervisord", "-n", "-c", "/etc/supervisord.conf"]
     depends_on:
       provision:
-        condition: service_completed_successfully
+        condition: service_healthy
     ports:
       - "${PANEL_PORT:-80}:80"
     environment:
@@ -145,7 +153,7 @@ services:
       ["/usr/bin/wings", "--config", "/etc/pelican/config.yml", "--debug"]
     depends_on:
       provision:
-        condition: service_completed_successfully
+        condition: service_healthy
     tty: true
     ports:
       - "${WINGS_PORT:-8080}:8080"
