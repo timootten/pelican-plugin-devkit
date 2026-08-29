@@ -1,0 +1,11 @@
+{
+  // panel-src/ is a copy of the running panel's app/vendor (see `php dev.php ide-sync`),
+  // used only so Intelephense can resolve App\, Filament\, Illuminate\ classes for plugin code.
+  "intelephense.environment.phpVersion": "8.3",
+  "search.exclude": {
+    "panel-src/vendor": true
+  },
+  "files.watcherExclude": {
+    "panel-src/vendor/**": true
+  }
+}
