@@ -2,6 +2,22 @@
   // panel-src/ is a copy of the running panel's app/vendor (see `php dev.php ide-sync`),
   // used only so Intelephense can resolve App\, Filament\, Illuminate\ classes for plugin code.
   "intelephense.environment.phpVersion": "8.3",
+  // These packages alone account for ~40% of panel-src/vendor's file count (icon
+  // sets + the full AWS SDK) but are almost never referenced directly by plugin
+  // code, so excluding them cuts Intelephense's indexing time significantly.
+  "intelephense.files.exclude": [
+    "**/.git/**",
+    "**/.svn/**",
+    "**/.hg/**",
+    "**/CVS/**",
+    "**/.DS_Store/**",
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**/{Tests,tests}/**",
+    "panel-src/vendor/secondnetwork/blade-tabler-icons/**",
+    "panel-src/vendor/blade-ui-kit/blade-heroicons/**",
+    "panel-src/vendor/aws/aws-sdk-php/**"
+  ],
   "search.exclude": {
     "panel-src/vendor": true
   },
