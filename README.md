@@ -102,7 +102,7 @@ This repository contains **only the development environment**. Each plugin is it
 repository, cloned into `plugins/<plugin-id>/`, and `plugins/*` is gitignored here.
 
 ```powershell
-git clone <plugin-repo-url> plugins/testapi
+git clone <plugin-repo-url> plugins/bridge
 ```
 
 The folder name must match the `id` field in the plugin's `plugin.json`, so always pass the
@@ -116,7 +116,7 @@ that file shows up as modified in the plugin repo. Strip `meta` before publishin
 
 ## Plugin development
 
-The plugin lives in `plugins/testapi/` and is mounted live into the container.
+The plugin lives in `plugins/bridge/` and is mounted live into the container.
 
 **What takes effect immediately, without a restart:**
 
@@ -149,7 +149,7 @@ Panel logs: `data/logs/laravel-*.log` or `php dev.php logs panel`.
 
 ## IDE autocomplete (Filament / Laravel / panel classes)
 
-The plugin only ships its own PHP files (`plugins/testapi/src`) – there is no local `vendor/`,
+The plugin only ships its own PHP files (`plugins/bridge/src`) – there is no local `vendor/`,
 so out of the box your editor can't resolve `Filament\...`, `Illuminate\...` or the panel's own
 `App\...` classes (`App\Models\Server`, `App\Filament\...`, etc.).
 
@@ -163,7 +163,7 @@ Filament, Laravel and panel version you're running, instead of a guessed tag fro
 [Intelephense](https://marketplace.visualstudio.com/items?itemName=bmewburn.vscode-intelephense-client)
 (recommended in `.vscode/extensions.json`) pick it up automatically – full autocomplete, hover
 docs and go-to-definition for Filament resources/pages/widgets and every panel model/service,
-right from `plugins/testapi/src`. `.vscode/settings.json` already excludes
+right from `plugins/bridge/src`. `.vscode/settings.json` already excludes
 `panel-src/vendor` from search and file-watching so the editor stays fast.
 
 `panel-src/` isn't touched again after that first sync. Run `php dev.php ide-sync` yourself to
@@ -171,7 +171,7 @@ refresh it after an image upgrade or `php dev.php artisan p:plugin:composer`. If
 `panel-src/composer.json`'s `require.php` differs from `8.3`, update
 `intelephense.environment.phpVersion` in `.vscode/settings.json` to match.
 
-**Adding a composer package to the plugin itself:** create `plugins/testapi/composer.json`
+**Adding a composer package to the plugin itself:** create `plugins/bridge/composer.json`
 with a `require` block, then run `php dev.php artisan p:plugin:composer` (Pelican merges and
 installs it into the panel's vendor) followed by `php dev.php ide-sync` to refresh autocomplete.
 
