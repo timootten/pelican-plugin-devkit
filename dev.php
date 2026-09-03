@@ -308,7 +308,24 @@ switch ($command) {
       echo "Required hostnames are missing from the hosts file.\n";
       setHosts($root, $env);
     }
-    $code = compose(['up', '-d', '--remove-orphans']);
+    // Check whether the core services are already running so we can skip the
+    // provision container.  Re-running provision on an already-booted stack
+    // causes a spurious error because Docker Compose treats an exited
+    // dependency (exit 0) as a failed dependency for services that use
+    // condition: service_healthy.
+    // Use docker ps with label filters - avoids Go-template quoting issues on
+    // Windows/MINGW64 that break "{{.Service}}" in exec() calls.
+    exec('docker ps -q --filter label=com.docker.compose.project=pelican-dev --filter label=com.docker.compose.service=panel --filter status=running', $panelIds);
+    exec('docker ps -q --filter label=com.docker.compose.project=pelican-dev --filter label=com.docker.compose.service=wings --filter status=running', $wingsIds);
+    $alreadyUp = count(array_filter(array_map('trim', $panelIds))) > 0
+      && count(array_filter(array_map('trim', $wingsIds))) > 0;
+    if ($alreadyUp) {
+      // Only (re)start the long-lived services; provision has already done its
+      // job and must not be restarted.
+      $code = compose(['up', '-d', '--remove-orphans', '--no-deps', 'postgres', 'redis', 'panel', 'wings']);
+    } else {
+      $code = compose(['up', '-d', '--remove-orphans']);
+    }
     if ($code !== 0) {
       exit($code);
     }
