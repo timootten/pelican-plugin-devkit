@@ -235,19 +235,10 @@ docker run --rm -it -v /var/lib/pelican:/data alpine sh
 
 ---
 
-## Creating a test server
-
-A _Paper Server_ (egg `Paper`) is created automatically on first provisioning, owned by the
-admin account and using the first free allocation on `local-wings`. Find it under
-**Admin → Servers** or on the dashboard - it installs itself and is reachable at
-`127.0.0.1:<port>` once it shows **running**. Disable this with `PROVISION_SERVER=false` in
-`.env`, or change `SERVER_NAME` / `SERVER_EGG` / `SERVER_MEMORY` / `SERVER_DISK` / `SERVER_CPU`
-to customize it.
-
-To create additional servers:
+## Creating a server
 
 1. In the panel go to **Admin → Servers → Create**
-2. Egg: _Vanilla Minecraft_ or _Paper_ (both are imported automatically)
+2. Import an egg via **Admin → Nests → Import Egg** (e.g. from the [Pelican egg repository](https://github.com/pelican-eggs))
 3. Node: `local-wings`, allocation: any port from `25565–25580`
 4. The server is then reachable at `127.0.0.1:<port>`
 

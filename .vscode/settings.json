@@ -23,5 +23,18 @@
   },
   "files.watcherExclude": {
     "panel-src/vendor/**": true
-  }
+  },
+  // Automatically discover git repositories nested in plugins/ (e.g. plugins/bridge)
+  "git.autoRepositoryDetection": true,
+  "git.repositoryScanMaxDepth": 2,
+  "git.repositoryScanIgnoredFolders": [
+    "node_modules",
+    "vendor",
+    "panel-src",
+    "data"
+  ],
+  "git.scanRepositories": [
+    "plugins/bridge"
+  ],
+  "scm.alwaysShowRepositories": true
 }
