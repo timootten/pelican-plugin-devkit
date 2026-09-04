@@ -28,6 +28,15 @@ function run(array $cmd): int
 
 function compose(array $args): int
 {
+  // When running 'exec' and STDIN is not a TTY (piped/subshell/automated runners),
+  // inject -T to disable pseudo-TTY allocation and prevent hanging.
+  if (isset($args[0]) && $args[0] === 'exec') {
+    $hasTtyFlag = in_array('-T', $args, true) || in_array('--no-TTY', $args, true);
+    if (!$hasTtyFlag && (function_exists('stream_isatty') && !@stream_isatty(STDIN))) {
+      array_splice($args, 1, 0, ['-T']);
+    }
+  }
+
   return run(array_merge(['docker', 'compose'], $args));
 }
 
@@ -365,7 +374,7 @@ switch ($command) {
   case 'refresh':
     // Drop every cache that can hide a plugin change, without a restart.
     foreach (['filament:optimize-clear', 'icons:clear', 'view:clear', 'config:clear', 'route:clear', 'event:clear', 'cache:clear'] as $target) {
-      $code = compose(['exec', 'panel', 'php', 'artisan', $target]);
+      $code = compose(['exec', '-T', 'panel', 'php', 'artisan', $target]);
       if ($code !== 0) {
         exit($code);
       }
