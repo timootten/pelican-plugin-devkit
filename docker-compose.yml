@@ -47,8 +47,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-pelican}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pelican}
       TZ: ${TZ:-UTC}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     # Named volume, not ./data: Postgres refuses to start on a Windows bind
     # mount because it cannot enforce 0700 on its data directory.
     volumes:
@@ -67,8 +65,6 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     command: ["redis-server", "--save", "", "--appendonly", "no"]
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
