@@ -41,7 +41,7 @@ x-panel-environment:
 services:
   postgres:
     image: postgres:17-alpine
-    restart: unless-stopped
+    restart: "no"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-panel}
       POSTGRES_USER: ${POSTGRES_USER:-pelican}
@@ -63,7 +63,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    restart: unless-stopped
+    restart: "no"
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -73,7 +73,7 @@ services:
 
   panel:
     image: ghcr.io/pelican/panel:latest
-    restart: unless-stopped
+    restart: "no"
     # Wrapper runs the upstream entrypoint, then tears down the caches that
     # would otherwise hide plugin changes until the next restart.
     entrypoint: ["/bin/ash", "/dev-entrypoint.sh"]
@@ -102,7 +102,7 @@ services:
 
   wings:
     image: ghcr.io/pelican/wings:latest
-    restart: unless-stopped
+    restart: "no"
     command:
       ["/usr/bin/wings", "--config", "/etc/pelican/config.yml", "--debug"]
     depends_on:
