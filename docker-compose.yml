@@ -1,6 +1,10 @@
-# Pelican plugin development stack.
+# Pelican plugin development stack — LOCAL DEV ONLY, NOT for production.
 #
 #   docker compose up -d
+#
+# WARNING: default credentials, APP_DEBUG=true and :latest images are
+# intentional for local plugin development. Never expose this stack to the
+# internet or reuse its .env/database in production.
 #
 # Everything (database, redis, admin user, node, Wings config.yml) is created
 # automatically by the one-shot `provision` service. See ./dev.php for helpers.
@@ -72,7 +76,7 @@ services:
       retries: 30
 
   panel:
-    image: ghcr.io/pelican/panel:latest
+    image: ${PANEL_IMAGE:-ghcr.io/pelican/panel:latest}
     restart: "no"
     # Wrapper runs the upstream entrypoint, then tears down the caches that
     # would otherwise hide plugin changes until the next restart.
@@ -83,6 +87,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     ports:
       - "${PANEL_PORT:-80}:80"
     environment:
@@ -101,7 +111,7 @@ services:
           - ${PANEL_HOST:-panel.pelican.test}
 
   wings:
-    image: ghcr.io/pelican/wings:latest
+    image: ${WINGS_IMAGE:-ghcr.io/pelican/wings:latest}
     restart: "no"
     command:
       ["/usr/bin/wings", "--config", "/etc/pelican/config.yml", "--debug"]
