@@ -88,7 +88,11 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1/ || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -f -o /dev/null http://127.0.0.1/ || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -110,12 +114,33 @@ services:
         aliases:
           - ${PANEL_HOST:-panel.pelican.test}
 
+  provision:
+    image: ${PANEL_IMAGE:-ghcr.io/pelican/panel:latest}
+    restart: "no"
+    entrypoint: ["/bin/ash", "/provision/provision.sh"]
+    depends_on:
+      panel:
+        condition: service_healthy
+    environment:
+      <<: *panel-environment
+      WINGS_CONFIG_PATH: /wings-config/config.yml
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@pelican.test}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password}
+      NODE_FQDN: ${WINGS_HOST:-wings.pelican.test}
+      ALLOCATION_ALIAS: "127.0.0.1"
+    volumes:
+      - ./data/panel:/pelican-data
+      - ./data/wings:/wings-config
+      - ./docker/provision:/provision:ro
+
   wings:
     image: ${WINGS_IMAGE:-ghcr.io/pelican/wings:latest}
     restart: "no"
     command:
       ["/usr/bin/wings", "--config", "/etc/pelican/config.yml", "--debug"]
     depends_on:
+      panel:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:

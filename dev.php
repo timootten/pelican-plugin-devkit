@@ -253,12 +253,17 @@ function removeDirectory(string $path): void
   rmdir($path);
 }
 
-function syncPanelSource(string $root): int
+function syncPanelSource(string $root, bool $includeVendor = false): int
 {
   $target = $root . '/panel-src';
-  $items = ['app', 'vendor', 'composer.json', 'composer.lock', 'resources/views'];
+  // vendor/ is huge (~150s) - skip it on `up`, only include on explicit `ide-sync`
+  $items = ['app', 'composer.json', 'composer.lock', 'resources/views'];
+  if ($includeVendor) {
+    $items[] = 'vendor';
+  }
 
-  echo "Syncing app/, vendor/ and views/ from the running panel container into ./panel-src (used for IDE autocomplete) ...\n";
+  $syncedItems = implode(', ', $items);
+  echo "Syncing {$syncedItems} from the running panel container into ./panel-src (used for IDE autocomplete) ...\n";
   foreach ($items as $item) {
     $dest = $target . '/' . $item;
     if (is_dir($dest)) {
@@ -275,7 +280,8 @@ function syncPanelSource(string $root): int
     }
   }
 
-  echo "Done. ./panel-src now mirrors the panel's app/, vendor/ and views/ for IDE autocomplete.\n";
+  $hint = $includeVendor ? '' : " Run 'php dev.php ide-sync' to also sync vendor/ for full IDE autocomplete.";
+  echo "Done. ./panel-src now mirrors the panel container's source for IDE autocomplete.{$hint}\n";
   return 0;
 }
 
@@ -294,10 +300,10 @@ Pelican plugin dev stack
   php dev.php artisan <...>  Run an artisan command in the panel container
   php dev.php shell          Open a shell in the panel container
   php dev.php refresh        Clear Filament/view/config caches after plugin edits
-  php dev.php provision      Re-run provisioning (user, node, allocations, eggs, test server)
+  php dev.php provision      Re-run provisioning (node, Wings config) - idempotent
   php dev.php wings-config   Print the live Wings config.yml
-  php dev.php wings-sync     Re-sync the Wings config and restart Wings
-  php dev.php ide-sync       Refresh ./panel-src (IDE autocomplete) - "up" does this once already
+  php dev.php wings-sync     Re-provision and restart Wings
+  php dev.php ide-sync       Full IDE sync incl. vendor/ (~150s) - "up" skips vendor/ for speed
 
   php dev.php hosts          Add *.pelican.test to the local hosts file
   php dev.php unhosts        Remove those hosts entries again
@@ -369,6 +375,7 @@ switch ($command) {
     exit(compose(['exec', 'panel', '/bin/ash']));
 
   case 'provision':
+    // Re-runs the one-shot provision container (idempotent).
     exit(compose(['up', '--force-recreate', 'provision']));
 
   case 'refresh':
@@ -385,13 +392,14 @@ switch ($command) {
   case 'wings-config':
     $path = $root . '/data/wings/config.yml';
     if (!is_file($path)) {
-      fwrite(STDERR, "data/wings/config.yml not found - run 'up' first.\n");
+      fwrite(STDERR, "data/wings/config.yml not found - run 'php dev.php provision' first.\n");
       exit(1);
     }
     readfile($path);
     break;
 
   case 'wings-sync':
+    // Re-provision (updates Wings config) then restart Wings.
     $code = compose(['up', '--force-recreate', 'provision']);
     if ($code !== 0) {
       exit($code);
@@ -399,7 +407,7 @@ switch ($command) {
     exit(compose(['restart', 'wings']));
 
   case 'ide-sync':
-    exit(syncPanelSource($root));
+    exit(syncPanelSource($root, includeVendor: true));
 
   case 'hosts':
     setHosts($root, $env);
